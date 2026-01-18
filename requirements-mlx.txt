@@ -1,0 +1,15 @@
+# MLX Dependencies (Apple Silicon only)
+# Install AFTER requirements.txt on your Mac
+#
+# These packages only work on Apple Silicon (M1/M2/M3/M4/M5)
+# Attempting to install on Intel or Linux will fail
+
+# MLX Framework - Apple's array framework for machine learning
+mlx==0.30.3
+
+# MLX Audio - Speech processing on MLX
+mlx-audio==0.2.10
+
+# Parakeet MLX - NVIDIA Parakeet models for MLX
+# Supports: ParakeetTDT, ParakeetRNNT, ParakeetCTC
+parakeet-mlx==0.5.0

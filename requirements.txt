@@ -1,0 +1,33 @@
+# Nemotron Speech Streaming to MLX Conversion
+# Dependencies for Steps 01-04 (extraction and conversion)
+#
+# All versions pinned as of 2026-01-18 for reproducibility
+#
+# PLATFORM: Linux, macOS (Intel or Apple Silicon), or Windows with PyTorch
+# PURPOSE: Download, extract, analyze, and convert model weights
+#
+# For Step 05 (MLX inference testing), see requirements-mlx.txt
+
+# ============================================================
+# CORE DEPENDENCIES
+# ============================================================
+
+# PyTorch - for loading .nemo/.ckpt files and tensor operations
+# Note: This installs CPU-only by default. For GPU support, see pytorch.org
+torch==2.10.0
+
+# Safetensors - for saving weights in MLX-compatible format
+# This is the output format that MLX can load
+safetensors==0.7.0
+
+# PyYAML - for parsing NeMo config files (model_config.yaml)
+PyYAML>=6.0.1
+
+# Rich - for formatted console output with progress bars and tables
+rich>=13.0.0
+
+# ============================================================
+# OPTIONAL: For Step 01 (download) if using huggingface_hub
+# ============================================================
+# Uncomment if you want to use the Python downloader instead of wget/curl
+# huggingface-hub==1.3.2
