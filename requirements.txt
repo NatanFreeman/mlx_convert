@@ -30,4 +30,4 @@ rich>=13.0.0
 # OPTIONAL: For Step 01 (download) if using huggingface_hub
 # ============================================================
 # Uncomment if you want to use the Python downloader instead of wget/curl
-huggingface-hub==1.3.2
+huggingface-hub<1.0

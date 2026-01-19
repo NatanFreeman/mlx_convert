@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -1935,6 +1935,7 @@ name = "mlx-convert"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "huggingface-hub" },
     { name = "pyyaml" },
     { name = "rich" },
     { name = "safetensors" },
@@ -1950,6 +1951,7 @@ mlx = [
 
 [package.metadata]
 requires-dist = [
+    { name = "huggingface-hub", specifier = "<1.0" },
     { name = "mlx", marker = "extra == 'mlx'", specifier = "==0.30.3" },
     { name = "mlx-audio", marker = "extra == 'mlx'", specifier = "==0.2.10" },
     { name = "parakeet-mlx", marker = "extra == 'mlx'", specifier = "==0.5.0" },
