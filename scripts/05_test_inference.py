@@ -53,11 +53,15 @@ try:
     import mlx.core as mx
     from rich.console import Console
     from rich.panel import Panel
-    
+
     # APPLY PATCH: Enable causal_downsampling support in parakeet-mlx
-    from scripts.parakeet_patch import apply_patch
+    try:
+        from scripts.parakeet_patch import apply_patch
+    except ImportError:
+        from parakeet_patch import apply_patch
+        
     apply_patch()
-    
+
 except ImportError as e:
     print(f"FATAL: Missing required package: {e}")
     print()
@@ -242,7 +246,7 @@ def test_audio_inference(model):
     # Save audio to a temporary file because parakeet-mlx.transcribe() expects a path
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
         temp_audio_path = tf.name
-        
+
     try:
         # Write WAV file
         with wave.open(temp_audio_path, 'wb') as wav_file:
