@@ -99,24 +99,22 @@ class PatchedDwStridingSubsampling(nn.Module):
         self.out = nn.Linear(self._conv_channels * final_freq_dim, args.d_model)
 
     def conv_forward(self, x: mx.array) -> mx.array:
-        x = x.transpose((0, 2, 3, 1)) # (N, Time, Freq, C)
+        # x is (B, T, F, 1)
         
         # Track which strided conv layer we are on
         strided_conv_idx = 0
         
         for i, layer in enumerate(self.conv):
-            # Check if this is one of the strided/kernel=3 convolutions
             # The structure is [Conv3x3, ReLU, Conv3x3, Conv1x1, ReLU, Conv3x3, Conv1x1, ReLU ...]
             # Indices of Conv3x3: 0, 2, 5, 8...
             is_strided_conv = (i == 0) or (i > 0 and (i - 2) % 3 == 0)
             
             if self.causal_downsampling and is_strided_conv:
-                # Time padding: Causal (2 left, 0 right)
-                pad_t = (2, 0)
-                
-                # Freq padding: 
+                # Time padding (axis 1): Causal (2 left, 0 right)
+                # Freq padding (axis 2): 
                 # Layer 0: 2 symmetric (2 left, 2 right)
                 # Others: 1 symmetric (1 left, 1 right)
+                pad_t = (2, 0)
                 pad_f = (2, 2) if strided_conv_idx == 0 else (1, 1)
                 
                 x = mx.pad(x, ((0, 0), pad_t, pad_f, (0, 0)))
@@ -124,8 +122,6 @@ class PatchedDwStridingSubsampling(nn.Module):
                 
             x = layer(x)
             
-        # Return NHWC (B, T, F, C) directly
-        # The __call__ method expects this layout to correctly flatten F*C
         return x
 
     def conv_split_by_batch(self, x: mx.array) -> tuple[mx.array, bool]:
@@ -159,7 +155,8 @@ class PatchedDwStridingSubsampling(nn.Module):
             )
         lengths = lengths.astype(mx.int32)
 
-        x = mx.expand_dims(x, axis=1)
+        # x is (B, T, F) -> expand to (B, T, F, 1)
+        x = mx.expand_dims(x, axis=-1)
 
         if self.subsampling_conv_chunking_factor != -1:
             if self.subsampling_conv_chunking_factor == 1:

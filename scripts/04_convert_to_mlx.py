@@ -404,7 +404,7 @@ def create_mlx_config(nemo_config: dict) -> dict:
         # PreprocessArgs (parakeet_mlx/audio.py)
         "preprocessor": {
             "sample_rate": preprocessor.get('sample_rate', 16000),
-            "normalize": preprocessor.get('normalize', 'NA'),
+            "normalize": 'per_feature' if preprocessor.get('normalize', 'NA') == 'NA' else preprocessor.get('normalize', 'per_feature'),
             "window_size": preprocessor.get('window_size', 0.025),
             "window_stride": preprocessor.get('window_stride', 0.01),
             "window": preprocessor.get('window', 'hann'),
@@ -449,7 +449,7 @@ def create_mlx_config(nemo_config: dict) -> dict:
         # JointArgs (parakeet_mlx/rnnt.py)
         # CRITICAL: vocabulary must be here as list of strings
         "joint": {
-            "num_classes": joint.get('num_classes', 1024),
+            "num_classes": 1024,
             "vocabulary": vocabulary,  # List of 1024 token strings
             # JointNetworkArgs nested
             "jointnet": {
