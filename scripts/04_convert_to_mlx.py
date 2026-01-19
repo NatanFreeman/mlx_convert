@@ -247,8 +247,8 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
                 stats['lstm_renamed'] += 1
 
                 if lstm_op in ['Wx', 'Wh']:
-                    # Transpose LSTM weights: (Out, In) -> (In, Out)
-                    tensor = tensor.t().contiguous()
+                    # MLX nn.LSTM expects (Out, In) layout, matching PyTorch (4*H, I)
+                    # DO NOT transpose - transposing causes shape mismatch
                     new_state_dict[new_key] = tensor
                 elif lstm_op == 'bias_ih':
                     if new_key in new_state_dict:
