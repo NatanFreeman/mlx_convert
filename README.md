@@ -272,7 +272,7 @@ Example: If a weight tensor has an unexpected shape, the script crashes with det
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| torch | 2.10.0 | Load .nemo/.ckpt files, tensor operations |
+| torch | >=2.1.0 | Load .nemo/.ckpt files, tensor operations |
 | safetensors | 0.7.0 | Save weights in MLX-compatible format |
 | PyYAML | ≥6.0.1 | Parse NeMo config files |
 | rich | ≥13.0.0 | Formatted console output |

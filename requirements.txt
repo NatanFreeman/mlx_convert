@@ -14,7 +14,7 @@
 
 # PyTorch - for loading .nemo/.ckpt files and tensor operations
 # Note: This installs CPU-only by default. For GPU support, see pytorch.org
-torch==2.10.0
+torch>=2.1.0
 
 # Safetensors - for saving weights in MLX-compatible format
 # This is the output format that MLX can load

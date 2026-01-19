@@ -18,5 +18,4 @@ mlx = [
     "parakeet-mlx==0.5.0",
 ]
 
-[tool.uv]
-dev-dependencies = []
+
