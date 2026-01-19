@@ -135,14 +135,14 @@ def test_load_weights():
         )
     console.print(f"  Vocabulary: {len(vocabulary)} tokens")
 
-    # Validate causal_downsampling workaround is in place
-    causal = config.get('encoder', {}).get('causal_downsampling', True)
-    if causal:
+    # Validate causal_downsampling is True (supported via patch)
+    causal = config.get('encoder', {}).get('causal_downsampling', False)
+    if not causal:
         raise TestError(
-            "causal_downsampling is True but parakeet-mlx doesn't support it!\n"
+            "causal_downsampling is False but we expect it to be True now!\n"
             "Re-run 04_convert_to_mlx.py to fix this."
         )
-    console.print(f"  causal_downsampling: {causal} (workaround applied)")
+    console.print(f"  causal_downsampling: {causal} (supported via patch)")
 
     # Load weights with safetensors
     weights_path = MLX_MODEL_DIR / "model.safetensors"
@@ -208,8 +208,8 @@ def test_parakeet_mlx_load():
             console.print(f"[red]  Subsampling error: {e}[/red]")
             console.print()
             console.print("  This means causal_downsampling is True in config.json")
-            console.print("  but parakeet-mlx doesn't support it.")
-            console.print("  Re-run 04_convert_to_mlx.py to fix.")
+            console.print("  but parakeet-mlx doesn't support it (even with patch).")
+            console.print("  Verify scripts/parakeet_patch.py is correctly applied.")
             raise TestError(f"causal_downsampling not supported: {e}")
         raise
 
@@ -339,7 +339,7 @@ Joint:
   num_classes: {joint.get('num_classes', 'unknown')}
 
 Workarounds Applied:
-  causal_downsampling: {conversion_info.get('original_causal_downsampling', 'N/A')} -> False
+  causal_downsampling: {conversion_info.get('original_causal_downsampling', 'N/A')} -> {encoder.get('causal_downsampling', 'unknown')} (Patched)
 """
     console.print(Panel(summary, title="Model Configuration"))
 

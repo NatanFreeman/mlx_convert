@@ -143,10 +143,9 @@ Based on: https://gist.github.com/senstella/77178bb5d6ec67bf8c54705a5f490bed
 
 ### 6. Causal Downsampling Support (Runtime Monkey Patch)
 
-**Problem:**
-- The original model uses `causal_downsampling: true`.
-- `parakeet-mlx` (v0.5.0) only supports `causal_downsampling: false`.
-- This causes a shape mismatch if we try to load the original weights without modification.
+**Decision: Support causal downsampling via runtime patch**
+
+The original model uses `causal_downsampling: true`, which `parakeet-mlx` (v0.5.0) does not natively support.
 
 **Solution:**
 - We implemented a **runtime monkey patch** in `scripts/parakeet_patch.py`.
@@ -154,9 +153,15 @@ Based on: https://gist.github.com/senstella/77178bb5d6ec67bf8c54705a5f490bed
 - The patch enables `causal_downsampling` by applying manual padding:
   - Frequency dimension: Adjusted padding (pad=2 on first layer) to match the original 17 bins.
   - Time dimension: Causal padding (pad=2 on left, 0 on right) to preserve causality.
-- **Benefit:** This allows us to use the original weights without modification and without needing to fork or permanently modify the installed `parakeet-mlx` library.
 
-### 7. Direct Copy (Everything Else)
+**Benefits:**
+- Ensures the weights are used correctly and streaming artifacts are minimized.
+- Allows us to use the original weights without modification.
+- Avoids the need to fork or permanently modify the installed `parakeet-mlx` library.
+
+---
+
+## Weight Transformation Logic (continued)
 
 **What:** All remaining weights are copied with original key names
 
@@ -283,39 +288,11 @@ Convert the NeMo YAML config directly to JSON, keeping the exact same structure.
 
 ## Known Limitations
 
-### 1. CRITICAL: Causal Downsampling Not Supported
+### 1. Causal Downsampling Support
 
-**Status:** BLOCKING for streaming inference
+**Status:** RESOLVED (via runtime patch)
 
-**Issue:** The Nemotron model uses `causal_downsampling: true` in its encoder configuration. parakeet-mlx raises `NotImplementedError` for this case.
-
-**parakeet-mlx conformer.py (lines 355-362):**
-```python
-if args.subsampling == "dw_striding" and args.causal_downsampling is False:
-    self.pre_encode = DwStridingSubsampling(args)
-else:
-    self.pre_encode = nn.Identity()
-    raise NotImplementedError(
-        "Other subsampling haven't been implemented yet!"
-    )
-```
-
-**What causal_downsampling affects:**
-- Padding behavior in convolution layers during inference
-- Causal mode uses asymmetric padding (all padding on past side) to ensure no future information leaks
-- This is a RUNTIME behavior, not a weight structure difference
-
-**Weight compatibility:**
-- The weights ARE structurally compatible (same shapes, same key names)
-- pre_encode structure: `conv.0`, `conv.2`, `conv.3`, `conv.5`, `conv.6`, `out` (matching parakeet-mlx)
-- Only runtime padding differs
-
-**Workaround options:**
-1. **Set `causal_downsampling: false` in config** - Model loads but streaming may have audio bleed issues
-2. **Modify parakeet-mlx** - Add causal padding support to DwStridingSubsampling
-3. **Use batch inference only** - Full audio processing works, just no streaming
-
-**Recommendation:** Set `causal_downsampling: false` and document that streaming inference may have boundary artifacts until parakeet-mlx adds causal support.
+**Solution:** The Nemotron model uses `causal_downsampling: true`. While `parakeet-mlx` doesn't natively support it, we apply a runtime patch in `scripts/parakeet_patch.py` to enable it. This preserves causality and prevents boundary artifacts in streaming inference.
 
 ### 2. Tokenizer: Vocabulary Embedded in Config, NOT Separate Files
 

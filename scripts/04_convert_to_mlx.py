@@ -366,7 +366,7 @@ def create_mlx_config(nemo_config: dict) -> dict:
     Key findings (2026-01-19):
     - Must have "target" field (NOT "_target_")
     - Vocabulary must be in joint.vocabulary as list of strings
-    - Must set causal_downsampling: false (parakeet-mlx doesn't support true)
+    - Causal downsampling supported via runtime patch (scripts/parakeet_patch.py)
 
     NOTE: NeMo config uses "_target_" but parakeet-mlx expects "target" (no underscore)
     """
@@ -426,8 +426,8 @@ def create_mlx_config(nemo_config: dict) -> dict:
             "conv_kernel_size": encoder.get('conv_kernel_size', 9),
             "subsampling_conv_channels": encoder.get('subsampling_conv_channels', 256),
             "pos_emb_max_len": encoder.get('pos_emb_max_len', 5000),
-            # We enable causal_downsampling because we will patch parakeet-mlx to support it
-            "causal_downsampling": encoder.get('causal_downsampling', False),
+            # We enable causal_downsampling because we now patch parakeet-mlx to support it
+            "causal_downsampling": encoder.get('causal_downsampling', True),
             "use_bias": encoder.get('use_bias', False),
             "xscaling": encoder.get('xscaling', False),
         },
@@ -474,7 +474,7 @@ def create_mlx_config(nemo_config: dict) -> dict:
 
     console.print("[green]  Config created with NeMo format for parakeet-mlx[/green]")
     console.print(f"  target: {mlx_config['target']}")
-    console.print(f"  causal_downsampling: {mlx_config['encoder']['causal_downsampling']} (workaround)")
+    console.print(f"  causal_downsampling: {mlx_config['encoder']['causal_downsampling']} (supported via patch)")
 
     return mlx_config
 

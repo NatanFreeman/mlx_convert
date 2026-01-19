@@ -79,24 +79,15 @@ def decode(tokens: list[int], vocabulary: list[str]):
 
 The 1024-token vocabulary must be in `config["joint"]["vocabulary"]`.
 
-### 3. Causal Downsampling Not Supported (LIMITATION)
+### 3. Causal Downsampling Supported (via Runtime Patch)
 
-The Nemotron model uses `causal_downsampling: true` for streaming. **parakeet-mlx doesn't support this**.
+The Nemotron model uses `causal_downsampling: true` for streaming. **Supported via runtime patch**.
 
-**Source**: [`parakeet_mlx/conformer.py` lines 355-362](https://github.com/senstella/parakeet-mlx/blob/de9ead8/parakeet_mlx/conformer.py#L355-L362) (commit de9ead8, version 0.5.0):
+We apply a monkey-patch to `parakeet-mlx` at runtime to support causal downsampling, ensuring full compatibility with the original model's streaming behavior.
 
-```python
-if args.subsampling_factor > 1:
-    if args.subsampling == "dw_striding" and args.causal_downsampling is False:
-        self.pre_encode = DwStridingSubsampling(args)
-    else:
-        self.pre_encode = nn.Identity()
-        raise NotImplementedError(
-            "Other subsampling haven't been implemented yet!"
-        )
-```
+**Solution**: We use `scripts/parakeet_patch.py` to add support for causal downsampling in `DwStridingSubsampling`. This ensures the weights are used correctly and streaming artifacts are minimized.
 
-**Workaround**: We set `causal_downsampling: false`. The weights are compatible (same shapes), but streaming inference may have boundary artifacts.
+**Source**: [`scripts/parakeet_patch.py`](scripts/parakeet_patch.py) which overrides `parakeet_mlx.conformer.DwStridingSubsampling`.
 
 ---
 
@@ -249,7 +240,7 @@ Step 05 performs these critical validations:
 
 If Step 05 fails, the conversion is **not valid** even if Steps 01-04 succeeded.
 
-**Note**: Due to the `causal_downsampling` limitation, streaming tests may show boundary artifacts.
+**Note**: Causal downsampling is supported via the `parakeet_patch.py` module.
 
 ---
 
