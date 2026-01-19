@@ -148,33 +148,23 @@ mlx_convert/
 
 ## Usage
 
-### uv (Recommended)
+### Stage 1: Extraction & Conversion (Any Platform)
 
-[`uv`](https://github.com/astral-sh/uv) is an extremely fast Python package manager. It allows running scripts in a managed environment without manual activation.
+#### uv (Recommended)
+
+[`uv`](https://github.com/astral-sh/uv) is an extremely fast Python package manager.
 
 ```bash
 cd /path/to/mlx_convert
 
-# 1. Create a virtual environment
-uv venv
-
-# 2. Install dependencies (uv automatically detects the .venv)
-uv pip install -r requirements.txt
-
-# 3. Run the conversion scripts
+# Run conversion scripts (automatically creates environment and installs dependencies)
 uv run scripts/01_download_model.py
 uv run scripts/02_extract_weights.py
 uv run scripts/03_analyze_architecture.py
 uv run scripts/04_convert_to_mlx.py
-
-# On Apple Silicon Mac (Stage 2):
-uv pip install -r requirements-mlx.txt
-uv run scripts/05_test_inference.py
 ```
 
-### pip (Legacy)
-
-#### Stage 1: Extraction & Conversion (Any Platform)
+#### pip (Legacy)
 
 ```bash
 cd /path/to/mlx_convert
@@ -215,6 +205,20 @@ tar -czf mlx_model.tar.gz output/mlx/
 ```
 
 On your Apple Silicon Mac:
+
+#### uv (Recommended)
+
+```bash
+cd /path/to/mlx_convert
+
+# Install the 'mlx' optional dependency group
+uv sync --extra mlx
+
+# Run inference test
+uv run scripts/05_test_inference.py
+```
+
+#### pip (Legacy)
 
 ```bash
 cd /path/to/mlx_convert
