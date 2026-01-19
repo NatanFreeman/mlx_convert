@@ -2,17 +2,27 @@ import math
 import mlx.core as mx
 import mlx.nn as nn
 import parakeet_mlx.conformer
-from parakeet_mlx.conformer import ConformerArgs
+from parakeet_mlx.conformer import ConformerArgs, ConformerBlock
+from parakeet_mlx.attention import (
+    RelPositionalEncoding,
+    LocalRelPositionalEncoding,
+)
 
 def apply_patch():
     """
-    Monkey-patch parakeet_mlx.conformer.DwStridingSubsampling to support causal_downsampling.
+    Monkey-patch parakeet_mlx to support causal_downsampling.
     
-    This is required because the original model uses causal_downsampling=True,
-    but parakeet-mlx v0.5.0 only supports False.
+    This patches:
+    1. parakeet_mlx.conformer.DwStridingSubsampling (to implement causal padding)
+    2. parakeet_mlx.conformer.Conformer.__init__ (to allow causal_downsampling=True)
     """
     print("[INFO] Applying runtime patch to parakeet_mlx for causal_downsampling support...")
+    
+    # 1. Replace the class with our patched version
     parakeet_mlx.conformer.DwStridingSubsampling = PatchedDwStridingSubsampling
+    
+    # 2. Replace Conformer.__init__ to bypass the check that forbids causal_downsampling
+    parakeet_mlx.conformer.Conformer.__init__ = patched_conformer_init
 
 class PatchedDwStridingSubsampling(nn.Module):
     def __init__(self, args: ConformerArgs):
@@ -117,7 +127,6 @@ class PatchedDwStridingSubsampling(nn.Module):
         return x.transpose((0, 3, 1, 2))
 
     def conv_split_by_batch(self, x: mx.array) -> tuple[mx.array, bool]:
-        # Helper required by parakeet-mlx, copied from original
         b = x.shape[0]
         if b == 1:
             return x, False
@@ -138,7 +147,7 @@ class PatchedDwStridingSubsampling(nn.Module):
         ), True
 
     def __call__(self, x: mx.array, lengths: mx.array) -> tuple[mx.array, mx.array]:
-        # Recalculate lengths - this logic remains mostly same but we need to ensure correct loop
+        # Recalculate lengths
         for _ in range(self._sampling_num):
             lengths = (
                 mx.floor(
@@ -170,3 +179,45 @@ class PatchedDwStridingSubsampling(nn.Module):
         x = x.reshape(b, t, f * c)
         x = self.out(x)
         return x, lengths
+
+def patched_conformer_init(self, args: ConformerArgs):
+    """
+    Patched __init__ for Conformer to allow causal_downsampling.
+    """
+    nn.Module.__init__(self)
+
+    self.args = args
+
+    if args.self_attention_model == "rel_pos":
+        self.pos_enc = RelPositionalEncoding(
+            d_model=args.d_model,
+            max_len=args.pos_emb_max_len,
+            scale_input=args.xscaling,
+        )
+    elif args.self_attention_model == "rel_pos_local_attn":
+        self.pos_enc = LocalRelPositionalEncoding(
+            d_model=args.d_model,
+            max_len=args.pos_emb_max_len,
+            scale_input=args.xscaling,
+            context_size=(args.att_context_size[0], args.att_context_size[1])
+            if args.att_context_size is not None
+            else (-1, -1),
+        )
+    else:
+        self.pos_enc = None
+
+    if args.subsampling_factor > 1:
+        # PATCHED: Check for dw_striding regardless of causal_downsampling
+        # The original code had: if args.subsampling == "dw_striding" and args.causal_downsampling is False:
+        if args.subsampling == "dw_striding":
+            # We use parakeet_mlx.conformer.DwStridingSubsampling which we have already patched
+            self.pre_encode = parakeet_mlx.conformer.DwStridingSubsampling(args)
+        else:
+            self.pre_encode = nn.Identity()
+            raise NotImplementedError(
+                f"Subsampling type '{args.subsampling}' with causal={args.causal_downsampling} not implemented!"
+            )
+    else:
+        self.pre_encode = nn.Linear(args.feat_in, args.d_model)
+
+    self.layers = [ConformerBlock(args) for _ in range(args.n_layers)]

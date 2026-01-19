@@ -150,6 +150,7 @@ The original model uses `causal_downsampling: true`, which `parakeet-mlx` (v0.5.
 **Solution:**
 - We implemented a **runtime monkey patch** in `scripts/parakeet_patch.py`.
 - This script injects a modified `DwStridingSubsampling` class into `parakeet_mlx` at runtime.
+- It also patches `Conformer.__init__` to bypass the check that forbids `causal_downsampling: true`.
 - The patch enables `causal_downsampling` by applying manual padding:
   - Frequency dimension: Adjusted padding (pad=2 on first layer) to match the original 17 bins.
   - Time dimension: Causal padding (pad=2 on left, 0 on right) to preserve causality.
