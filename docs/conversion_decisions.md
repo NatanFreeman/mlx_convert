@@ -170,6 +170,16 @@ The original model uses `causal_downsampling: true`, which `parakeet-mlx` (v0.5.
 - Linear layer weights, embeddings, layer norms, etc. are format-compatible
 - No transformation needed for these weight types
 
+### 5. Linear/LSTM Weight Transposition (NOT Performed)
+
+**Decision: Do NOT transpose Linear or LSTM weights.**
+
+**Why:**
+- PyTorch `nn.Linear(In, Out)` stores weights as `(Out, In)`.
+- MLX `nn.Linear(In, Out)` ALSO stores weights as `(Out, In)`.
+- Therefore, the weight layout is identical. No transposition is needed.
+- Attempting to transpose results in shape mismatches (e.g., `(4352, 1024)` vs `(1024, 4352)`).
+
 ---
 
 ## Cache-Aware Streaming

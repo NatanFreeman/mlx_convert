@@ -155,10 +155,10 @@ def permute_tensor(tensor: torch.Tensor, key: str) -> torch.Tensor:
 
     if ndim == 4:
         # (out, in, h, w) -> (out, h, w, in)
-        return tensor.permute(0, 2, 3, 1)
+        return tensor.permute(0, 2, 3, 1).contiguous()
     elif ndim == 3:
         # (out, in, len) -> (out, len, in)
-        return tensor.permute(0, 2, 1)
+        return tensor.permute(0, 2, 1).contiguous()
     else:
         # Unexpected - log warning but don't permute
         console.print(f"[yellow]WARNING: {key} needs permutation but has {ndim}D shape - skipping permute[/yellow]")

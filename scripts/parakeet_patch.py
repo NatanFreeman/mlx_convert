@@ -124,7 +124,9 @@ class PatchedDwStridingSubsampling(nn.Module):
                 
             x = layer(x)
             
-        return x.transpose((0, 3, 1, 2))
+        # Return NHWC (B, T, F, C) directly
+        # The __call__ method expects this layout to correctly flatten F*C
+        return x
 
     def conv_split_by_batch(self, x: mx.array) -> tuple[mx.array, bool]:
         b = x.shape[0]
