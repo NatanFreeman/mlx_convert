@@ -166,7 +166,7 @@ def test_parakeet_mlx_load():
     console.print("[bold blue]Testing parakeet-mlx loading...[/bold blue]")
 
     try:
-        from parakeet_mlx import ParakeetRNNT
+        from parakeet_mlx import from_pretrained
     except ImportError as e:
         console.print("[red]  FATAL: parakeet-mlx not installed[/red]")
         console.print()
@@ -176,10 +176,10 @@ def test_parakeet_mlx_load():
         console.print(f"  Import error: {e}")
         raise TestError("parakeet-mlx is required but not installed")
 
-    console.print("  Attempting to load model with ParakeetRNNT.from_pretrained()...")
+    console.print("  Attempting to load model with from_pretrained()...")
 
     try:
-        model = ParakeetRNNT.from_pretrained(str(MLX_MODEL_DIR))
+        model = from_pretrained(str(MLX_MODEL_DIR))
         console.print("[green]  parakeet-mlx loading: PASSED[/green]")
         return model
 
@@ -346,8 +346,8 @@ def main():
         console.print("The converted model is ready for use!")
         console.print()
         console.print("Usage:")
-        console.print("  from parakeet_mlx import ParakeetRNNT")
-        console.print(f"  model = ParakeetRNNT.from_pretrained('{MLX_MODEL_DIR}')")
+        console.print("  from parakeet_mlx import from_pretrained")
+        console.print(f"  model = from_pretrained('{MLX_MODEL_DIR}')")
         console.print("  text = model.transcribe('audio.wav')")
 
     except TestError as e:

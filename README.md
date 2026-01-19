@@ -283,7 +283,7 @@ Example: If a weight tensor has an unexpected shape, the script crashes with det
 |---------|---------|---------|
 | mlx | 0.30.3 | Apple's ML framework for Apple Silicon |
 | mlx-audio | 0.2.10 | Audio processing on MLX |
-| parakeet-mlx | 0.5.0 | NVIDIA Parakeet model implementations for MLX |
+| parakeet-mlx | 0.4.1 | NVIDIA Parakeet model implementations for MLX |
 
 ---
 
