@@ -141,7 +141,24 @@ Based on: https://gist.github.com/senstella/77178bb5d6ec67bf8c54705a5f490bed
 - MLX combines input and hidden biases into single bias tensor
 - The sum is mathematically equivalent: `Wx·x + Wh·h + b_ih + b_hh = Wx·x + Wh·h + b`
 
-### 5. Direct Copy (Everything Else)
+### 6. Weight Pruning (Fix for Causal Downsampling Mismatch)
+
+**What:** Prune `encoder.pre_encode.out.weight` from `(1024, 4352)` to `(1024, 4096)`.
+
+**Why:**
+- The original model uses `causal_downsampling: true`.
+- `parakeet-mlx` only supports `causal_downsampling: false`.
+- This config change alters the subsampling layer's output dimension:
+  - Causal (original): Produces 17 frequency bins -> `256 * 17 = 4352` features.
+  - Non-Causal (parakeet-mlx): Produces 16 frequency bins -> `256 * 16 = 4096` features.
+- Result: A runtime shape mismatch at the linear projection layer.
+
+**Solution:**
+- We slice the weights to keep the first 4096 inputs (`tensor[:, :4096]`).
+- This effectively drops the weights corresponding to the 17th frequency bin (likely the highest frequency edge).
+- This is necessary to make the pre-trained weights compatible with the `parakeet-mlx` architecture.
+
+### 7. Direct Copy (Everything Else)
 
 **What:** All remaining weights are copied with original key names
 

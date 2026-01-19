@@ -293,6 +293,15 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
                     bn_layers_processed.add(base_key)
                     stats['bn_generated'] += 2  # 2 new tensors
 
+            # --- FIX: Prune pre_encode output weight ---
+            # parakeet-mlx's non-causal DwStridingSubsampling produces 16 freq bins,
+            # but the original causal model produced 17. This causes a shape mismatch
+            # in the linear projection: (1024, 4352) vs expected (1024, 4096).
+            # We fix this by pruning the weights for the 17th frequency bin.
+            if key == "encoder.pre_encode.out.weight" and tensor.shape == (1024, 4352):
+                console.print("[yellow]  Pruning encoder.pre_encode.out.weight: (1024, 4352) -> (1024, 4096)[/yellow]")
+                tensor = tensor[:, :4096].contiguous()
+
             # Direct copy with same key
             stats['direct_copy'] += 1
             new_state_dict[key] = tensor
