@@ -1957,7 +1957,7 @@ requires-dist = [
     { name = "mlx", marker = "extra == 'mlx'", specifier = "==0.30.3" },
     { name = "mlx-audio", marker = "extra == 'mlx'", specifier = "==0.2.10" },
     { name = "numpy" },
-    { name = "parakeet-mlx", marker = "extra == 'mlx'", specifier = "==0.5.0" },
+    { name = "parakeet-mlx", marker = "extra == 'mlx'", specifier = "==0.4.1" },
     { name = "pyyaml", specifier = ">=6.0.1" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "safetensors", specifier = "==0.7.0" },
@@ -2893,7 +2893,7 @@ wheels = [
 
 [[package]]
 name = "parakeet-mlx"
-version = "0.5.0"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dacite" },
@@ -2904,9 +2904,9 @@ dependencies = [
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "typer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/17/2527994bcb51f29ea94fa1cd92ca96e6c298f19d3a4c3396fe5ff837a40e/parakeet_mlx-0.5.0.tar.gz", hash = "sha256:b3aab979108b6b862d074ac0ddb8d0112d4bcb2a9995818de85a366abdc302be", size = 37562, upload-time = "2026-01-07T16:19:08.74Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/82/e2e7d9b168136f8882deb0ace58805add4d78ef936b9489970584196e569/parakeet_mlx-0.4.1.tar.gz", hash = "sha256:070460f0cd80b4a22230d7079abd5d7f315734351c6dae211d557d706de54bf9", size = 35011, upload-time = "2025-11-20T01:28:50.65Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/e9/faf19b3ec005646747ddab675fe58d32cc5447437ac243f5ff80860ae2ee/parakeet_mlx-0.5.0-py3-none-any.whl", hash = "sha256:6a4ebdcf18e64cec1e0579f28963f1b50afd174e7bd2ab2f3dd5737191417c03", size = 37113, upload-time = "2026-01-07T16:19:07.473Z" },
+    { url = "https://files.pythonhosted.org/packages/4b/2a/385f250e64ec5fd8047bf4170dba74b97125788fb723dccf616b3e95ada7/parakeet_mlx-0.4.1-py3-none-any.whl", hash = "sha256:9ab4afe49c655d28d52d4790bb1b3dc7933834542c60e01232eb59dcf6a627f0", size = 34881, upload-time = "2025-11-20T01:28:49.225Z" },
 ]
 
 [[package]]
