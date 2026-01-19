@@ -219,8 +219,9 @@ def test_audio_inference(model):
         console.print("[yellow]  Skipping - model not loaded[/yellow]")
         return
 
-    # Create a simple test audio (silence or sine wave)
     import numpy as np
+    import wave
+    import tempfile
 
     # Generate 1 second of audio at 16kHz (model's expected sample rate)
     sample_rate = 16000
@@ -233,18 +234,32 @@ def test_audio_inference(model):
 
     console.print(f"  Generated test audio: {len(audio)} samples, {duration}s")
 
+    # Save audio to a temporary file because parakeet-mlx.transcribe() expects a path
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
+        temp_audio_path = tf.name
+        
     try:
+        # Write WAV file
+        with wave.open(temp_audio_path, 'wb') as wav_file:
+            wav_file.setnchannels(1)  # Mono
+            wav_file.setsampwidth(2)   # 16-bit
+            wav_file.setframerate(sample_rate)
+            # Convert float32 to int16
+            audio_int16 = (audio * 32767).astype(np.int16)
+            wav_file.writeframes(audio_int16.tobytes())
+
         # Run inference
-        result = model.transcribe(audio)
+        result = model.transcribe(temp_audio_path)
         console.print(f"  Transcription result: '{result}'")
         console.print("[green]  Audio inference: PASSED[/green]")
-
-        # Note: We don't check the content since it's just a tone
-        # A real test would use actual speech audio
 
     except Exception as e:
         console.print(f"[red]  Audio inference failed: {e}[/red]")
         raise TestError(f"Inference failed: {e}")
+    finally:
+        # Clean up
+        if os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
 
 
 def test_streaming_inference(model):
@@ -273,8 +288,10 @@ def test_streaming_inference(model):
         with model.transcribe_stream(context_size=[70, 6]) as stream:
             for i in range(num_chunks):
                 chunk = np.zeros(int(sample_rate * chunk_duration), dtype=np.float32)
-                result = stream.transcribe(chunk)
-                console.print(f"    Chunk {i+1}: '{result}'")
+                # In parakeet-mlx, we use add_audio then check result
+                stream.add_audio(mx.array(chunk))
+                current_text = stream.result.text
+                console.print(f"    Chunk {i+1}: '{current_text}'")
 
         console.print("[green]  Streaming inference: PASSED[/green]")
 
