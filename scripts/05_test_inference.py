@@ -57,7 +57,8 @@ except ImportError as e:
     print(f"FATAL: Missing required package: {e}")
     print()
     print("Install with:")
-    print("  pip install mlx parakeet-mlx rich")
+    print("  uv sync --extra mlx")
+    print("  # OR: pip install mlx parakeet-mlx rich")
     sys.exit(1)
 
 # ============================================================
