@@ -141,22 +141,20 @@ Based on: https://gist.github.com/senstella/77178bb5d6ec67bf8c54705a5f490bed
 - MLX combines input and hidden biases into single bias tensor
 - The sum is mathematically equivalent: `Wx·x + Wh·h + b_ih + b_hh = Wx·x + Wh·h + b`
 
-### 6. Weight Pruning (Fix for Causal Downsampling Mismatch)
+### 6. Causal Downsampling Support (Runtime Monkey Patch)
 
-**What:** Prune `encoder.pre_encode.out.weight` from `(1024, 4352)` to `(1024, 4096)`.
-
-**Why:**
+**Problem:**
 - The original model uses `causal_downsampling: true`.
-- `parakeet-mlx` only supports `causal_downsampling: false`.
-- This config change alters the subsampling layer's output dimension:
-  - Causal (original): Produces 17 frequency bins -> `256 * 17 = 4352` features.
-  - Non-Causal (parakeet-mlx): Produces 16 frequency bins -> `256 * 16 = 4096` features.
-- Result: A runtime shape mismatch at the linear projection layer.
+- `parakeet-mlx` (v0.5.0) only supports `causal_downsampling: false`.
+- This causes a shape mismatch if we try to load the original weights without modification.
 
 **Solution:**
-- We slice the weights to keep the first 4096 inputs (`tensor[:, :4096]`).
-- This effectively drops the weights corresponding to the 17th frequency bin (likely the highest frequency edge).
-- This is necessary to make the pre-trained weights compatible with the `parakeet-mlx` architecture.
+- We implemented a **runtime monkey patch** in `scripts/parakeet_patch.py`.
+- This script injects a modified `DwStridingSubsampling` class into `parakeet_mlx` at runtime.
+- The patch enables `causal_downsampling` by applying manual padding:
+  - Frequency dimension: Adjusted padding (pad=2 on first layer) to match the original 17 bins.
+  - Time dimension: Causal padding (pad=2 on left, 0 on right) to preserve causality.
+- **Benefit:** This allows us to use the original weights without modification and without needing to fork or permanently modify the installed `parakeet-mlx` library.
 
 ### 7. Direct Copy (Everything Else)
 

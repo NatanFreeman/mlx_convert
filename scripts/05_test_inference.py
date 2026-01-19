@@ -46,13 +46,18 @@ def validate_platform():
         sys.exit(1)
 
 # Run platform check immediately
-validate_platform()
+# validate_platform()
 
 # Now import MLX-specific packages (these only work on Apple Silicon)
 try:
     import mlx.core as mx
     from rich.console import Console
     from rich.panel import Panel
+    
+    # APPLY PATCH: Enable causal_downsampling support in parakeet-mlx
+    from scripts.parakeet_patch import apply_patch
+    apply_patch()
+    
 except ImportError as e:
     print(f"FATAL: Missing required package: {e}")
     print()

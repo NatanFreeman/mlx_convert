@@ -293,15 +293,6 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
                     bn_layers_processed.add(base_key)
                     stats['bn_generated'] += 2  # 2 new tensors
 
-            # --- FIX: Prune pre_encode output weight ---
-            # parakeet-mlx's non-causal DwStridingSubsampling produces 16 freq bins,
-            # but the original causal model produced 17. This causes a shape mismatch
-            # in the linear projection: (1024, 4352) vs expected (1024, 4096).
-            # We fix this by pruning the weights for the 17th frequency bin.
-            if key == "encoder.pre_encode.out.weight" and tensor.shape == (1024, 4352):
-                console.print("[yellow]  Pruning encoder.pre_encode.out.weight: (1024, 4352) -> (1024, 4096)[/yellow]")
-                tensor = tensor[:, :4096].contiguous()
-
             # Direct copy with same key
             stats['direct_copy'] += 1
             new_state_dict[key] = tensor
@@ -435,9 +426,8 @@ def create_mlx_config(nemo_config: dict) -> dict:
             "conv_kernel_size": encoder.get('conv_kernel_size', 9),
             "subsampling_conv_channels": encoder.get('subsampling_conv_channels', 256),
             "pos_emb_max_len": encoder.get('pos_emb_max_len', 5000),
-            # CRITICAL: Must be false - parakeet-mlx raises NotImplementedError for true
-            # See docs/conversion_decisions.md "Causal Downsampling Not Supported"
-            "causal_downsampling": False,  # Original is True but parakeet-mlx doesn't support it
+            # We enable causal_downsampling because we will patch parakeet-mlx to support it
+            "causal_downsampling": encoder.get('causal_downsampling', False),
             "use_bias": encoder.get('use_bias', False),
             "xscaling": encoder.get('xscaling', False),
         },
@@ -477,7 +467,7 @@ def create_mlx_config(nemo_config: dict) -> dict:
         "_conversion_info": {
             "source_model": "nvidia/nemotron-speech-streaming-en-0.6b",
             "original_causal_downsampling": encoder.get('causal_downsampling', True),
-            "causal_downsampling_note": "Set to false because parakeet-mlx doesn't support true. See docs/conversion_decisions.md",
+            "causal_downsampling_note": "Enabled. Requires patched parakeet-mlx.",
             "conversion_script": "04_convert_to_mlx.py",
         },
     }
