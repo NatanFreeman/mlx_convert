@@ -218,7 +218,11 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
         'lstm_renamed': 0,
         'direct_copy': 0,
         'bias_summed': 0,
+        'bn_generated': 0,
     }
+
+    # Keep track of which batch norm layers we've already generated buffers for
+    bn_layers_processed = set()
 
     with Progress(
         SpinnerColumn(),
@@ -243,18 +247,14 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
                 stats['lstm_renamed'] += 1
 
                 if lstm_op in ['Wx', 'Wh']:
-                    # Direct rename
                     new_state_dict[new_key] = tensor
                 elif lstm_op == 'bias_ih':
-                    # Bias needs to be summed with bias_hh
                     if new_key in new_state_dict:
-                        # Already have the other bias, sum them
                         new_state_dict[new_key] = new_state_dict[new_key] + tensor
                         stats['bias_summed'] += 1
                     else:
                         new_state_dict[new_key] = tensor
                 elif lstm_op == 'bias_hh':
-                    # Bias needs to be summed with bias_ih
                     if new_key in new_state_dict:
                         new_state_dict[new_key] = new_state_dict[new_key] + tensor
                         stats['bias_summed'] += 1
@@ -267,6 +267,32 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
                 tensor = permute_tensor(tensor, key)
                 stats['permuted'] += 1
 
+            # --- FIX: Generate missing BatchNorm buffers ---
+            # The source checkpoint is missing running_mean and running_var, but
+            # parakeet-mlx's BatchNorm implementation requires them. We generate
+            # them here with standard initial values (zeros for mean, ones for var).
+            if ".conv.batch_norm." in key:
+                # Get the base path, e.g., 'encoder.layers.0.conv.batch_norm.'
+                base_key = key[:key.rfind('.')] + '.'
+
+                # Add running_mean and running_var if we haven't for this layer
+                if base_key not in bn_layers_processed:
+                    # The size of mean/var is the number of channels, which is
+                    # the first (and only) dimension of the weight/bias tensor.
+                    size = tensor.shape[0]
+
+                    # Create zero-filled mean and one-filled var tensors
+                    running_mean = torch.zeros(size)
+                    running_var = torch.ones(size)
+
+                    # Add them to the new state dict
+                    new_state_dict[base_key + 'running_mean'] = running_mean
+                    new_state_dict[base_key + 'running_var'] = running_var
+
+                    # Mark this layer as processed and update stats
+                    bn_layers_processed.add(base_key)
+                    stats['bn_generated'] += 2  # 2 new tensors
+
             # Direct copy with same key
             stats['direct_copy'] += 1
             new_state_dict[key] = tensor
@@ -278,6 +304,7 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
     console.print(f"  Permuted: {stats['permuted']}")
     console.print(f"  LSTM renamed: {stats['lstm_renamed']}")
     console.print(f"  Bias pairs summed: {stats['bias_summed']}")
+    console.print(f"  BatchNorm buffers generated: {stats['bn_generated']} (FIX)")
     console.print(f"  Direct copy: {stats['direct_copy']}")
     console.print(f"  Total output tensors: {len(new_state_dict)}")
 
