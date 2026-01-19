@@ -372,7 +372,7 @@ def main():
         if strategy['compatible']:
             console.print("[bold green]SUCCESS: Architecture analysis complete[/bold green]")
             console.print()
-            console.print(f"Next step: python scripts/04_convert_to_mlx.py")
+            console.print(f"Next step: [bold green]uv run scripts/04_convert_to_mlx.py[/bold green] (or pip: python scripts/04_convert_to_mlx.py)")
         else:
             console.print("[bold red]INCOMPATIBILITY DETECTED[/bold red]")
             console.print("Review the issues above before proceeding.")

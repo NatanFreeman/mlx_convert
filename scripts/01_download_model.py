@@ -210,7 +210,7 @@ def main():
 
         console.print()
         console.print("[bold green]SUCCESS: Model downloaded and validated[/bold green]")
-        console.print(f"Next step: python scripts/02_extract_weights.py")
+        console.print(f"Next step: [bold green]uv run scripts/02_extract_weights.py[/bold green] (or pip: python scripts/02_extract_weights.py)")
 
     except (ConfigurationError, DownloadValidationError) as e:
         console.print()

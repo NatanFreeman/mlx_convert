@@ -579,7 +579,7 @@ def main():
         console.print("[yellow]IMPORTANT: causal_downsampling set to false (parakeet-mlx limitation)[/yellow]")
         console.print("[yellow]See docs/conversion_decisions.md for details[/yellow]")
         console.print()
-        console.print("Next step: python scripts/05_test_inference.py")
+        console.print("Next step: [bold green]uv run scripts/05_test_inference.py[/bold green] (or pip: python scripts/05_test_inference.py)")
         console.print()
         console.print("[yellow]NOTE: Step 5 requires Apple Silicon Mac with MLX installed[/yellow]")
 

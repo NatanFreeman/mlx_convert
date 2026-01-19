@@ -345,7 +345,7 @@ def main():
         console.print(f"  - {OUTPUT_DIR / 'model_weights.ckpt'}")
         console.print(f"  - {OUTPUT_DIR / 'weight_keys.txt'}")
         console.print()
-        console.print(f"Next step: python scripts/03_analyze_architecture.py")
+        console.print(f"Next step: [bold green]uv run scripts/03_analyze_architecture.py[/bold green] (or pip: python scripts/03_analyze_architecture.py)")
 
     except (ExtractionError, ArchitectureMismatchError) as e:
         console.print()
