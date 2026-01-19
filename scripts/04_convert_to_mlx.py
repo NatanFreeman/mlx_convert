@@ -247,6 +247,8 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
                 stats['lstm_renamed'] += 1
 
                 if lstm_op in ['Wx', 'Wh']:
+                    # Transpose LSTM weights: (Out, In) -> (In, Out)
+                    tensor = tensor.t().contiguous()
                     new_state_dict[new_key] = tensor
                 elif lstm_op == 'bias_ih':
                     if new_key in new_state_dict:
@@ -302,7 +304,7 @@ def convert_weights(state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tens
     console.print("[green]Conversion complete:[/green]")
     console.print(f"  Skipped: {stats['skipped']}")
     console.print(f"  Permuted: {stats['permuted']}")
-    console.print(f"  LSTM renamed: {stats['lstm_renamed']}")
+    console.print(f"  LSTM renamed (and transposed): {stats['lstm_renamed']}")
     console.print(f"  Bias pairs summed: {stats['bias_summed']}")
     console.print(f"  BatchNorm buffers generated: {stats['bn_generated']} (FIX)")
     console.print(f"  Direct copy: {stats['direct_copy']}")
